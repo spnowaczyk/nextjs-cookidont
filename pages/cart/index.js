@@ -6,14 +6,16 @@ const Cart = () => {
     const [ingredients, setIngredients] = useState([]);
     const [newIngredientName, setNewIngredientName] = useState('');
     const [newIngredientAmount, setNewIngredientAmount] = useState('');
+    const [newIngredientUnit, setNewIngredientUnit] = useState('');
     const [checkedIngredients, setCheckedIngredients] = useState({});
 
     useEffect(() => {
         const getIngredients = async () => {
             try {
-                const ingredientsData = await apiService.fetchIngredients('/example-endpoint');
+                const ingredientsData = await apiService.fetchIngredientsList('/ingredients-list/1');
                 setIngredients(ingredientsData);
                 console.log("Ingredients data loaded");
+                console.log(ingredientsData)
             } catch (error) {
                 console.error("Error fetching ingredients data:", error);
             }
@@ -22,26 +24,83 @@ const Cart = () => {
         getIngredients();
     }, []);
 
-    const handleDelete = (ingredientName) => {
+    const handleDelete = async (ingredientName) => {
         const updatedIngredients = ingredients.filter(ingredient => ingredient.name !== ingredientName);
         setIngredients(updatedIngredients);
 
         const updatedChecked = { ...checkedIngredients };
         delete updatedChecked[ingredientName];
         setCheckedIngredients(updatedChecked);
+
+        // Update ingredients list on the server
+        console.log(updatedIngredients)
+        await apiService.updateIngredientsList('/ingredients-list/1', updatedIngredients);
     };
 
-    const handleAddIngredient = () => {
-        if (newIngredientName && newIngredientAmount) {
-            const newIngredient = {
-                name: newIngredientName,
-                amount: parseInt(newIngredientAmount)
-            };
-            setIngredients(prevState => [...prevState, newIngredient]);
-            setNewIngredientName('');
-            setNewIngredientAmount('');
+    const handleAddIngredient = async () => {
+        if (newIngredientName && newIngredientAmount && newIngredientUnit) {
+            try {
+                // Fetch the ingredient by name to check if it exists
+                let fetchedIngredient = await apiService.fetchIngredientIfExistByName("/ingredients?search=", newIngredientName);
+                console.log('fetchedIngredient');
+                console.log(fetchedIngredient);
+
+                // Fetch current ingredients list
+                let currentIngredients = await apiService.fetchIngredientsList('/ingredients-list/1');
+                console.log('currentIngredients');
+                console.log(currentIngredients);
+
+                let keys = Object.keys(fetchedIngredient);
+                let fetchedIngredientlength = keys.length;
+                console.log('fetchedIngredientLenght')
+                console.log(fetchedIngredientlength)
+
+                if(fetchedIngredientlength === 0) {
+                    // If the ingredient does not exist at all, create it and add it to the list
+                    await apiService.createIngredient('/ingredients', newIngredientName, newIngredientUnit);
+                    const newCreatedIngredient = await apiService.fetchIngredientIfExistByName("/ingredients?search=", newIngredientName)
+                    console.log('new ing');
+                    console.log(newCreatedIngredient)
+                    fetchedIngredient = newCreatedIngredient;
+                }
+                //old code
+
+                // Check if the ingredient already exists in the cart
+                const existingIngredientIndex = currentIngredients.findIndex(ingredient => ingredient.id === fetchedIngredient.id);
+                console.log('existingIngredientIndex');
+                console.log(existingIngredientIndex);
+
+                if (existingIngredientIndex !== -1) {
+                    // If ingredient already exists, increase its quantity
+                    currentIngredients[existingIngredientIndex].quantity += parseInt(newIngredientAmount);
+                } else {
+                    // If ingredient does not exist, add it to the list
+                    if (fetchedIngredient.id) {
+                        // If the ingredient exists in the fetched data
+                        currentIngredients.push({
+                            ...fetchedIngredient,
+                            quantity: parseInt(newIngredientAmount),
+                            completed: false
+                        });
+                    } else {
+                    }
+                }
+
+                // Update the ingredients list on the server
+                await apiService.updateIngredientsList('/ingredients-list/1', currentIngredients);
+
+                // Update the local state
+                setIngredients(currentIngredients);
+                setNewIngredientName('');
+                setNewIngredientAmount('');
+                setNewIngredientUnit('');
+            } catch (error) {
+                console.error('Error adding or updating ingredient:', error);
+            }
         }
     };
+
+
 
     const handleCheckboxChange = (ingredientName) => {
         setCheckedIngredients(prevState => ({
@@ -70,7 +129,7 @@ const Cart = () => {
                                             checkedIngredients[ingredient.name] ? 'line-through text-gray-500' : ''
                                         }`}
                                     >
-                                        {ingredient.name}: {ingredient.amount}
+                                        {ingredient.name}: {ingredient.quantity} {ingredient.unit}
                                     </span>
                                 </div>
                                 <button
@@ -97,6 +156,13 @@ const Cart = () => {
                                 placeholder="Amount"
                                 value={newIngredientAmount}
                                 onChange={(e) => setNewIngredientAmount(e.target.value)}
+                                className="border border-gray-300 p-2 rounded w-full"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Unit"
+                                value={newIngredientUnit}
+                                onChange={(e) => setNewIngredientUnit(e.target.value)}
                                 className="border border-gray-300 p-2 rounded w-full"
                             />
                             <button

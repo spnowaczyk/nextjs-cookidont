@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import ApiService from "../../services/ApiService";
 import Link from 'next/link';
+import styles from './RecipeList.module.css';
+import apiService from "../../services/ApiService"; // Import the CSS module
 
 export default function RecipeList() {
     const [cart, setCart] = useState({});
@@ -12,6 +14,7 @@ export default function RecipeList() {
             ...prevCart,
             [id]: (prevCart[id] || 0) + 1,
         }));
+        apiService.mergeAndUpdateIngredientsByRecepie(`/recipes/${id}`, '/ingredients-list/1', '/ingredients-list/1')
     };
 
     const handleRemoveFromCart = (id) => {
@@ -20,6 +23,7 @@ export default function RecipeList() {
             delete newCart[id];
             return newCart;
         });
+        apiService.demergeAndUpdateIngredientsByRecepie(`/recipes/${id}`, '/ingredients-list/1', '/ingredients-list/1')
     };
 
     const handleIncreaseQuantity = (id) => {
@@ -27,6 +31,7 @@ export default function RecipeList() {
             ...prevCart,
             [id]: prevCart[id] + 1,
         }));
+        apiService.mergeAndUpdateIngredientsByRecepie(`/recipes/${id}`, '/ingredients-list/1', '/ingredients-list/1')
     };
 
     const handleDecreaseQuantity = (id) => {
@@ -43,19 +48,19 @@ export default function RecipeList() {
                 };
             }
         });
+        apiService.demergeAndUpdateIngredientsByRecepie(`/recipes/${id}`, '/ingredients-list/1', '/ingredients-list/1')
     };
 
     useEffect(() => {
         const fetchRecipesBaseArray = async () => {
             try {
-                const fetchedRecipes = await ApiService.fetchRecipesBaseArray('/example-endpoint');
+                const fetchedRecipes = await ApiService.fetchRecipesBaseArray('/recipes');
                 setRecipes(fetchedRecipes);
                 console.log("data loaded");
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         };
-
         fetchRecipesBaseArray();
     }, []);
 
@@ -65,7 +70,7 @@ export default function RecipeList() {
             <div key={recipe.id} className="max-w-sm rounded overflow-hidden shadow-lg">
                 <Link legacyBehavior href={`http://localhost:3000/show-recipe?id=${recipe.id}`}>
                     <a>
-                        <img className="w-fit h-96 object-cover cursor-pointer" src={recipe.photo_url} alt="Recipe Image"/>
+                        <img className={`w-fit h-96 object-cover cursor-pointer ${styles.imageHover}`} src={recipe.photo_url} alt="Recipe Image"/>
                     </a>
                 </Link>
                 <div className="px-6 py-4">
@@ -122,4 +127,5 @@ export default function RecipeList() {
         </div>
     );
 }
+
 

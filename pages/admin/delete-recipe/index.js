@@ -9,7 +9,7 @@ export default function DeleteRecipe() {
     useEffect(() => {
         const fetchRecipes = async () => {
             try {
-                const fetchedRecipes = await apiService.fetchRecipesBaseArray('/example-endpoint');
+                const fetchedRecipes = await apiService.fetchRecipesBaseArray(`/recipes`);
                 setRecipes(fetchedRecipes);
                 console.log("Recipes loaded");
             } catch (error) {

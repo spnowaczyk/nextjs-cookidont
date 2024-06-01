@@ -72,7 +72,7 @@ export default function AddRecipe() {
                 description: '',
                 fluff: '',
                 time: '',
-                ingredients: [{ name: '', amount: '' }],
+                ingredients: [{ name: '', quantity: '' }],
                 guide: ['']
             });
             alert('Recipe added successfully!');
@@ -192,7 +192,7 @@ export default function AddRecipe() {
                             ))}
                             <button
                                 type="button"
-                                onClick={() => setRecipeData(prevState => ({ ...prevState, ingredients: [...prevState.ingredients, { name: '', amount: '' }] }))}
+                                onClick={() => setRecipeData(prevState => ({ ...prevState, ingredients: [...prevState.ingredients, { name: '', quantity: '' }] }))}
                                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                             >
                                 Add Ingredient

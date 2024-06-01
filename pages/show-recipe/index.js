@@ -11,7 +11,8 @@ export default function ShowRecipe() {
     useEffect(() => {
         const fetchRecipe = async () => {
             try {
-                const recipe = await ApiService.fetchRecipeExtended(`/example-endpoint?id=${id}`);
+                const queredId = id.toString();
+                const recipe = await ApiService.fetchRecipeExtended(`/recipes/${queredId}`);
                 setRecipe(recipe);
                 console.log("Data loaded");
             } catch (error) {
@@ -24,8 +25,14 @@ export default function ShowRecipe() {
 
     if (!recipe) return <p>Slow down, brick cowboy! You have {id} bricks!</p>;
 
+    console.log('ingredients')
+    console.log(recipe.ingredients)
+    console.log('desig')
+    console.log(recipe.desig)
+    console.log('guide')
+    console.log(recipe.guide)
     // Constructing an array of strings representing ingredients and quantities
-    const ingredientsList = recipe.ingredients.map(ingredient => `${ingredient.name}: ${ingredient.amount}`);
+    const ingredientsList = recipe.ingredients.map(ingredient => `${ingredient[0]}: ${ingredient[1]}`);
 
     return (
         <>
